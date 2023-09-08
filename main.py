@@ -158,7 +158,11 @@ with col1:
         "Paragliding": paragliding,
     }
 
+    user_video = st.file_uploader("Upload a Video (MP4 format)", type=["mp4"])
+    
     selected_sample_video = st.selectbox("Select a Sample Video", list(sample_videos.keys()))
+
+    st.markdown("***")
 
     # Parameters
     grid_size = st.slider("Grid Size", 1, 30, 10)
@@ -166,7 +170,6 @@ with col1:
     backward_tracking = st.checkbox("Backward Tracking")
     visualize_track_traces = st.checkbox("Visualize Track Traces")
 
-    user_video = st.file_uploader("Upload a Video (MP4 format)", type=["mp4"])
 
     # "Run" button
     if st.button("Run"):
