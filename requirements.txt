@@ -1,7 +1,7 @@
 einops
 timm
 tqdm
-opencv-python
+opencv-python-headless
 matplotlib
 moviepy
 flow_vis
