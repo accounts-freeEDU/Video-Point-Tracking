@@ -7,3 +7,4 @@ moviepy
 flow_vis
 streamlit
 imutils
+libgl1-mesa-glx
