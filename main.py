@@ -10,10 +10,9 @@ import numpy as np
 from cotracker.predictor import CoTrackerPredictor
 from cotracker.utils.visualizer import Visualizer
 
-# Function to parse video
+
 def parse_video(video_file):
     vs = cv2.VideoCapture(video_file)
-    print(video_file)
 
     frames = []
     while True:
@@ -25,6 +24,7 @@ def parse_video(video_file):
             break
 
     return np.stack(frames)
+
 
 # Function to run cotracker_demo
 def cotracker_demo(
@@ -81,10 +81,20 @@ def cotracker_demo(
         os.path.dirname(__file__), "results", f"{filename}_pred_track.mp4"
     )
 
-@st.cache_data
-def cotracker_demo_cached(input_video, grid_size, grid_query_frame, backward_tracking, visualize_track_traces):
-    return cotracker_demo(input_video, grid_size, grid_query_frame, backward_tracking, visualize_track_traces)
+import tempfile
 
+@st.cache
+def cotracker_demo_cached(input_video, grid_size, grid_query_frame, backward_tracking, visualize_track_traces):
+    if isinstance(input_video, str):
+        # Use the provided video path
+        video_path = input_video
+    else:
+        # Save the uploaded video to a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
+            temp_video.write(input_video.read())
+            video_path = temp_video.name
+
+    return cotracker_demo(video_path, grid_size, grid_query_frame, backward_tracking, visualize_track_traces)
 
 # Sample video file paths
 apple = os.path.join(os.path.dirname(__file__), "assets", "apple.mp4")
@@ -136,7 +146,11 @@ with col1:
         "Paragliding": paragliding,
     }
 
+    user_video = st.file_uploader("Upload a Video (MP4 format)", type=["mp4"])
+
     selected_sample_video = st.selectbox("Select a Sample Video", list(sample_videos.keys()))
+
+    st.markdown("***")
 
     # Parameters
     grid_size = st.slider("Grid Size", 1, 30, 10)
@@ -144,7 +158,6 @@ with col1:
     backward_tracking = st.checkbox("Backward Tracking")
     visualize_track_traces = st.checkbox("Visualize Track Traces")
 
-    user_video = st.file_uploader("Upload a Video (MP4 format)", type=["mp4"])
 
     # "Run" button
     if st.button("Run"):
@@ -174,4 +187,5 @@ else:
     with col2:
         st.markdown("### Result")
         st.video(result_video, format="video/mp4")
+
 
