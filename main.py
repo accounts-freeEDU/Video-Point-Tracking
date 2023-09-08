@@ -10,9 +10,31 @@ import numpy as np
 from cotracker.predictor import CoTrackerPredictor
 from cotracker.utils.visualizer import Visualizer
 
+
 # Function to parse video
 def parse_video(video_file):
-    vs = cv2.VideoCapture(video_file)
+    if isinstance(video_file, str):
+        # If video_file is a string, it's a file path (sample video)
+        vs = cv2.VideoCapture(video_file)
+    else:
+        # If video_file is not a string, it's an uploaded video
+        # Use BytesIO to read the uploaded video as bytes
+        video_bytes = video_file.read()
+        nparr = np.frombuffer(video_bytes, np.uint8)
+        vs = cv2.VideoCapture()
+
+        # You can set additional properties here if needed
+        # For example, set frame width, frame height, and fps:
+        vs.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        vs.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        vs.set(cv2.CAP_PROP_FPS, 30)
+
+        # OpenCV doesn't provide a direct way to set the video data, so you'll need to
+        # write the video frames to a temporary file and read it again using VideoCapture.
+        temp_video_path = 'temp_video.mp4'
+        with open(temp_video_path, 'wb') as temp_file:
+            temp_file.write(video_bytes)
+        vs.open(temp_video_path)
 
     frames = []
     while True:
@@ -24,6 +46,7 @@ def parse_video(video_file):
             break
 
     return np.stack(frames)
+
 
 # Function to run cotracker_demo
 def cotracker_demo(
@@ -173,4 +196,5 @@ else:
     with col2:
         st.markdown("### Result")
         st.video(result_video, format="video/mp4")
+
 
