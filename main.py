@@ -27,25 +27,6 @@ def parse_video(video_file):
 
     return np.stack(frames)
 
-# Function to handle the uploaded video
-def handle_uploaded_video(user_video):
-    # Create a temporary directory
-    temp_dir = tempfile.mkdtemp()
-    temp_video_path = os.path.join(temp_dir, "uploaded_video.mp4")
-
-    # Save the uploaded video to the temporary directory
-    with open(temp_video_path, "wb") as f:
-        f.write(user_video.read())
-
-    # Process the video
-    result_video = cotracker_demo_cached(temp_video_path, grid_size, grid_query_frame, backward_tracking, visualize_track_traces)
-
-    # Clean up the temporary directory and file
-    os.remove(temp_video_path)
-    os.rmdir(temp_dir)
-
-    return result_video
-
 
 # Function to run cotracker_demo
 def cotracker_demo(
@@ -103,7 +84,16 @@ def cotracker_demo(
 
 @st.cache_data
 def cotracker_demo_cached(input_video, grid_size, grid_query_frame, backward_tracking, visualize_track_traces):
-    return cotracker_demo(input_video, grid_size, grid_query_frame, backward_tracking, visualize_track_traces)
+    if isinstance(input_video, str):
+        # Use the provided video path
+        video_path = input_video
+    else:
+        # Save the uploaded video to a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
+            temp_video.write(input_video.read())
+            video_path = temp_video.name
+
+    return cotracker_demo(video_path, grid_size, grid_query_frame, backward_tracking, visualize_track_traces)
 
 # Sample video file paths
 apple = os.path.join(os.path.dirname(__file__), "assets", "apple.mp4")
@@ -172,7 +162,8 @@ with col1:
     if st.button("Run"):
         if user_video is not None:
             # Use the uploaded video
-            result_video = handle_uploaded_video(user_video)
+            result_video = cotracker_demo_cached(user_video, grid_size, grid_query_frame, backward_tracking,
+                                                 visualize_track_traces)
         else:
             # Use the selected sample video
             sample_video_path = sample_videos[selected_sample_video]
