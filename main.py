@@ -3,6 +3,7 @@ import os
 import cv2
 import imutils
 import torch
+import time
 import timm
 import einops
 import tempfile
@@ -25,6 +26,21 @@ def parse_video(video_file):
             break
 
     return np.stack(frames)
+
+# Function to save uploaded video and return the file path
+def save_uploaded_video(uploaded_file):
+    if uploaded_file is not None:
+        # Create a temporary directory to store uploaded files
+        temp_dir = tempfile.mkdtemp()
+        # Create a unique file name
+        video_filename = f"uploaded_video_{int(time.time())}.mp4"
+        video_path = os.path.join(temp_dir, video_filename)
+        # Save the uploaded file to the temporary directory
+        with open(video_path, "wb") as f:
+            f.write(uploaded_file.read())
+        return video_path
+    return None
+
 
 
 # Function to run cotracker_demo
@@ -65,7 +81,6 @@ def cotracker_demo(
         show_first_frame=5,
         tracks_leave_trace=-1 if tracks_leave_trace else 0,
     )
-    import time
 
     def current_milli_time():
         return round(time.time() * 1000)
@@ -84,16 +99,16 @@ def cotracker_demo(
 
 @st.cache_data
 def cotracker_demo_cached(input_video, grid_size, grid_query_frame, backward_tracking, visualize_track_traces):
-    if isinstance(input_video, str):
-        # Use the provided video path
-        video_path = input_video
-    else:
-        # Save the uploaded video to a temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
-            temp_video.write(input_video.read())
-            video_path = temp_video.name
+    # if isinstance(input_video, str):
+    #     # Use the provided video path
+    #     video_path = input_video
+    # else:
+    #     # Save the uploaded video to a temporary file
+    #     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
+    #         temp_video.write(input_video.read())
+    #         video_path = temp_video.name
 
-    return cotracker_demo(video_path, grid_size, grid_query_frame, backward_tracking, visualize_track_traces)
+    return cotracker_demo(input_video, grid_size, grid_query_frame, backward_tracking, visualize_track_traces)
 
 # Sample video file paths
 apple = os.path.join(os.path.dirname(__file__), "assets", "apple.mp4")
@@ -157,12 +172,14 @@ with col1:
     backward_tracking = st.checkbox("Backward Tracking")
     visualize_track_traces = st.checkbox("Visualize Track Traces")
 
+    # Get the uploaded video file path
+    uploaded_video_path = save_uploaded_video(user_video)
 
     # "Run" button
     if st.button("Run"):
-        if user_video is not None:
+        if uploaded_video_path is not None:
             # Use the uploaded video
-            result_video = cotracker_demo_cached(user_video, grid_size, grid_query_frame, backward_tracking,
+            result_video = cotracker_demo_cached(uploaded_video_path, grid_size, grid_query_frame, backward_tracking,
                                                  visualize_track_traces)
         else:
             # Use the selected sample video
