@@ -1,0 +1,9 @@
+einops
+timm
+PyQt5
+tqdm
+opencv-python
+matplotlib
+moviepy
+flow_vis
+imutils
